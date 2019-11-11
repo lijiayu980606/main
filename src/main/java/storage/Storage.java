@@ -28,9 +28,9 @@ import java.util.Set;
  */
 public class Storage {
     private static String basefilepath = System.getProperty("user.dir");
-    private static String projectsfilepath = basefilepath + "/localdata/Projects.json";
-    private static String commandlistfilepath = basefilepath +  "/localdata/history.json";
-    private static String fundfilepath =  basefilepath + "/localdata/Fund.json";
+    private static String projectsfilepath = basefilepath + "/localdata/BackupProjects.json";
+    private static String commandlistfilepath = basefilepath +  "/localdata/Backuphistory.json";
+    private static String fundfilepath =  basefilepath + "/localdata/BackupFund.json";
     private static String tasklistfilepath =  basefilepath + "/localdata/TaskList.json";
     private static String undoListFilePath = basefilepath +  "/localdata/undo.json";
     private static String redoListFilePath = basefilepath +  "/localdata/redo.json";
@@ -42,8 +42,6 @@ public class Storage {
     private static String backupfundfilepath = "BackupFund.json";
     private static String backupprojectsfilepath = "BackupProjects.json";
     private static String backupTaskListfilepath = "BackupTaskList.json";
-
-
 
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();
 

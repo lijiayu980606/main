@@ -14,7 +14,6 @@ import task.Deadline;
 import task.Task;
 import ui.Ui;
 
-import javax.sound.sampled.Line;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.text.ParseException;
@@ -25,6 +24,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -70,7 +70,7 @@ class ProcessTest {
     @Test
     void testaddProject_WithNoBudget_success() {
         input = "add project pr/Test am/";
-        process.addProject(input, ui, fund, storage);
+        process.addProject(input, ui, storage, fund);
         Project expectedproject = new Project("Test");
         Project outputproject = process.projectManager.projectmap.get("Test");
         assertEquals(expectedproject.giveProject(), outputproject.giveProject());
@@ -83,7 +83,7 @@ class ProcessTest {
         assertEquals(fund.getFund(), 2000);
 
         input = "add project pr/Flag am/100";
-        process.addProject(input, ui, fund, storage);
+        process.addProject(input, ui, storage, fund);
         Project expectedproject = new Project("Flag", 100);
         Project outputproject = process.projectManager.projectmap.get("Flag");
         assertEquals(expectedproject.giveProject(), outputproject.giveProject());
@@ -92,7 +92,7 @@ class ProcessTest {
     @Test
     void testaddProject_InputNegative_NoBudget_fail() {
         input = "add project pr/Flag am/-100";
-        process.addProject(input, ui, fund, storage);
+        process.addProject(input, ui, storage, fund);
         assertFalse(process.projectManager.projectmap.containsKey("Flag"));
     }
 
@@ -103,14 +103,14 @@ class ProcessTest {
         assertEquals(fund.getFund(), 2000);
 
         input = "add project pr/Flag am/3000";
-        process.addProject(input, ui, fund, storage);
+        process.addProject(input, ui, storage, fund);
         assertFalse(process.projectManager.projectmap.containsKey("Flag"));
     }
 
     @Test
     void deleteProject_ProjectExists() throws AlphaNUSException {
         input = "add project pr/Test am/";
-        process.addProject(input, ui, fund, storage);
+        process.addProject(input, ui, storage, fund);
         assertTrue(process.projectManager.projectmap.containsKey("Test"));
         input = "delete project pr/Test";
         process.deleteProject(input, ui, storage, fund);
@@ -152,7 +152,7 @@ class ProcessTest {
     void goToProject_WithExistingProject_success() {
         process.projectManager.projectmap = new LinkedHashMap<>();
         input = "add project pr/Test am/";
-        process.addProject(input, ui, fund, storage);
+        process.addProject(input, ui, storage, fund);
         process.projectManager.currentprojectname = null;
         input = "goto 1";
         process.goToProject(input, ui);
@@ -442,29 +442,67 @@ class ProcessTest {
     void within() {
     }
 
-    //@@author
+    //@@karansarat
     @Test
-    void edit() {
+    void edit() throws AlphaNUSException {
+        addPayee();
+        ProjectManager projectManager = new ProjectManager();
+        input = "edit p/test f/PAYEE r/CHANGED";
+        process.edit(input, ui);
+        assertTrue(projectManager.projectmap.get("rag").managermap.containsKey("CHANGED"));
+        input = "edit p/CHANGED f/PAYEE r/test";
+        process.edit(input, ui);
+        addPayment();
+        input = "edit p/test i/CS2113T f/COST r/23.59";
+        process.edit(input, ui);
+        assertTrue(projectManager.projectmap.get("rag").managermap.get("test").payments.get(0).cost == 22.22);
     }
 
     @Test
-    void deletePayment() {
+    void deletePayment() throws AlphaNUSException {
+        addPayee();
+        addPayment();
+        ProjectManager projectManager = new ProjectManager();        
+        assertFalse(projectManager.projectmap.get("rag").managermap.get("test").payments.isEmpty());
+        input = "delete payment p/test      i/CS2113T";
+        process.deletePayment(input, ui, storage, dict);
+        assertTrue(projectManager.projectmap.get("rag").managermap.get("test").payments.isEmpty());
     }
 
     @Test
-    void addPayment() {
+    void addPayment() throws AlphaNUSException {
+        ProjectManager projectManager = new ProjectManager();
+        addPayee();
+        input = "add payment p/   test i/ CS2113T  c/11.11 v/IM-DED";
+        process.addPayment(input, ui, storage, dict);
+        assertTrue(projectManager.projectmap.get("rag").managermap.get("test").payments.get(0).item.equals("CS2113T"));
+        assertTrue(projectManager.projectmap.get("rag").managermap.get("test").payments.get(0).cost == 11.11);
+        assertTrue(projectManager.projectmap.get("rag").managermap.get("test").payments.get(0).inv.equals("IM-DED"));
+
     }
 
     @Test
-    void addPayee() {
+    void addPayee() throws AlphaNUSException {
+        fund.loadFund(2000, 500, 1500);
+        ProjectManager projectManager = new ProjectManager();
+        projectManager.addProject("rag", 1500);
+        input = "add payee p/   test e/  email@address.com    m/A100000A ph/838484904";
+        process.addPayee(input, ui, storage);
+        assertEquals(projectManager.projectmap.get("rag").managermap, "test");
+        assertEquals(projectManager.projectmap.get("rag").managermap.get("test").email, "email@address.com");
+        assertEquals(projectManager.projectmap.get("rag").managermap.get("test").matricNum, "A100000A");
+        assertEquals(projectManager.projectmap.get("rag").managermap.get("test").phoneNum, "838484904");
     }
 
     @Test
-    void deletePayee() {
-    }
-
-    @Test
-    void findPayee() {
+    void deletePayee() throws AlphaNUSException {
+        addPayee();
+        ProjectManager projectManager = new ProjectManager();
+        assertEquals(projectManager.projectmap.get("rag").managermap.size(), 1);
+        input = "delete payee p/test";
+        process.deletePayee(input, ui, storage);
+        assertEquals(projectManager.projectmap.get("rag").managermap.size(), 0);
+        assertFalse(projectManager.projectmap.get("rag").managermap.containsKey("test"));
     }
 
     //@@author lijiayu980606

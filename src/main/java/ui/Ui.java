@@ -236,6 +236,15 @@ public class Ui {
     }
 
     /**
+     * Prints a message with the details of a payment that the user requested for.
+     * @param payment the payment object the user queried for.
+     */
+    public void printFoundMessage(Payments payment) {
+        System.out.println("\tHere are the details you requested!");
+        payment.printPayment();
+    }
+
+    /**
      * Prints the list of payments of a payee.
      * @param name Name of project
      * @param paymentList paymentList of the payee.
@@ -330,7 +339,6 @@ public class Ui {
         System.out.print("       " + tasklist.get(id).giveTask() + "\n");
         System.out.print(line);
     }
-
 
     //@@author lijiayu980606
     /**
@@ -540,7 +548,7 @@ public class Ui {
      */
     public void printAddFundMessage(Fund fund, double amount) {
         System.out.print(line);
-        System.out.println("\t" + "Got it. I've added " + amount + " dollars to the fund. The new fund is as follow:");
+        System.out.println("\t" + "Got it. I've added " + amount + " dollars to the fund. The new fund is as follows:");
         System.out.print(fund.giveFund());
         System.out.print(line);
     }
@@ -575,7 +583,7 @@ public class Ui {
                 + projectname + ":");
         System.out.println(project.giveProject());
         System.out.println("");
-        System.out.println("\t" + "The new fund is as follow:");
+        System.out.println("\t" + "The new fund is as follows:");
         System.out.print(fund.giveFund());
         System.out.print(line);
     }
@@ -627,7 +635,7 @@ public class Ui {
      */
     public void printReminderMessage(ArrayList<Payments> paymentlist) {
         System.out.print(line);
-        System.out.print("\tYour reminder is as follow:\n");
+        System.out.print("\tYour reminder is as follows:\n");
         for (int i = 0; i < paymentlist.size(); i++) {
             Payments p = paymentlist.get(i);
             System.out.println("\t" + (i + 1) + ":");
@@ -678,7 +686,7 @@ public class Ui {
         System.out.println("Fund:");
         System.out.println("\tSet Fund:            " + commandFormat.setFundFormat());
         System.out.println("\tAdd Fund:            " + commandFormat.addFundFormat());
-        System.out.println("\tAssign budget:         " + commandFormat.assignFundFormat());
+        System.out.println("\tAssign budget:       " + commandFormat.assignFundFormat());
         System.out.println("\tChange Fund:         " + commandFormat.resetFundFormat());
         System.out.println("\tShow Fund:           " + commandFormat.showFundFormat());
         System.out.println("Payment and Payee:");
@@ -686,11 +694,14 @@ public class Ui {
         System.out.println("\tAdd Payment:         " + commandFormat.addPaymentFormat());
         System.out.println("\tDelete Payee:        " + commandFormat.deletePayeeFormat());
         System.out.println("\tDelete Payment:      " + commandFormat.deletePaymentFormat());
+        System.out.println("\tList Current Project Payments: " + commandFormat.listPaymentCurrFormat());
+        System.out.println("\tList Specific Project Payments:" + commandFormat.listPaymentProjectFormat());
+        System.out.println("\tList Payee Payments: " + commandFormat.listPaymentPayeeFormat());
         System.out.println("\tFind Payee:          " + commandFormat.findPayeeFormat());
-        System.out.println("\tList Payments:       " + commandFormat.listPaymentFormat());
-        System.out.println("\tFind Payee:          " + commandFormat.findPayeeFormat());
-        System.out.println("\tTotal cost:          " + commandFormat.totalCostFormat());
-        System.out.println("\tEdit Payment/Payee:  " + commandFormat.editPaymentFormat());
+        System.out.println("\tFind Payment:        " + commandFormat.findPaymentFormat());
+        System.out.println("\tEdit Payment:        " + commandFormat.editPaymentFormat());
+        System.out.println("\tEdit Payee:          " + commandFormat.editPayeeFormat());
+        System.out.println("\tTotal Cost:          " + commandFormat.totalCostFormat());
         System.out.println("\tReminder:            " + commandFormat.reminderFormat());
         System.out.println("Tasks:");
         System.out.println("\tAdd Todo:            " + commandFormat.addTodoFormat());
@@ -709,6 +720,14 @@ public class Ui {
         System.out.println("\tExit:                " + commandFormat.exitFormat());
 
         System.out.print(line);
+    }
+
+    public void cantUndomessage() {
+        System.out.println("This command can't be undone. Only add payment, delete payment, add payee and delete payee can be undone.");
+    }
+
+    public void cantRedomessage() {
+        System.out.println("A command can only be redone if the previous command is undo.");
     }
 
     /**

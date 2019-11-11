@@ -15,7 +15,10 @@ endif::[]
 :repoURL: https://github.com/AY1920S1-CS2113T-F10-3/main/blob/master
 
 By: `AY1920S1-CS2113T-F10-3` Since: `Aug 2019` Licence: `NUS`
-
+Team members: http://github.com/leowyh[Leow Yong Heng] |
+http://github.com/lijiayu980606[Li Jiayu] |
+http://github.com/E0373902[Shriya Saxena]
+| http://github.com/karansarat[Karan Sarat]
 
 == Introduction
 
@@ -105,8 +108,13 @@ image::ModelClassDiagram.png[]
 
 [[Design-Storage]]
 === Storage component
+[[fig-StorageClassDiagram]]
+.Structure of the Storage Component
+image::StorageClassDiagram.png[]
 
-{To be added}
+.  `Storage` is used by the `Command` component to read and write data from local storage.
+.  The data that is stored is saved as json files and serialized using Gson.
+
 
 // end::Design[]
 // tag::Project[]
@@ -115,15 +123,39 @@ This section describes some noteworthy details on how certain features are imple
 
 
 === Project Feature
+==== Project Class
+The `Project` Class object stores the project's budget details along with a HashMap of `Payee` objects consisting of payees have made payments for a project. A `Project` object can be constructed with or without a budget assigned to it depending on user input.
+The following are the class members storing the project's details.
+
+** Total budget for the Project : `budget`
+** Spending made by Payees : `spending`
+** Remaining budget : `remaining`
+** Name of the project : `projectname`
+
+==== Project Feature Commands
 The `project` feature is managed by the `ProjectManager` class, which is called by the
 `Process` class in the `Command` component.
 
 This feature supports the following commands:
 
-* `add project pr/PROJECT_NAME` -- Adds a new project to the record.
+* `add project pr/PROJECT_NAME am/AMOUNT` -- Adds a new project to the record.
 * `delete project pr/PROJECT_NAME` -- Deletes a project from the record.
-* `goto project pr/PROJECT_NAME` -- Go to a project in the record.
-* `list project` -- Lists all projects in the record.
+* `goto project PROJECT_INDEX_IN_LIST` -- Go to a project in the record.
+* `list projects` -- Lists all projects in the record.
+
+
+==== ProjectManager
+The `ProjectManager` class is subclassed in the project package, which contains the `Project` and `Fund` classes. It serves to process the input from the `Command` package and implement the project feature commands (Section 4.1.2) along with fund feature commands(Section TBC). The `ProjectManager` class implements the following methods:
+
+* ProjectManager#addProject
+* ProjectManager#deleteProject
+* ProjectManager#gotoProject
+* ProjectManager#assignBudget
+* ProjectManager#getCurrentProjectManagerMap
+* ProjectManager#loadBackup
+* ProjectManager#updateDict
+* ProjectManager#findPayee
+* ProjectManager#findPayee
 
 A detailed explanation of the use case for the `add project` command is given below to demonstrate how each component interacts with each other.
 
@@ -143,6 +175,10 @@ The `delete project` command is implemented in the same manner to the `add proje
 
 // end::Project[]
 
+=== Fund Feature
+==== Fund Class
+==== Fund Feature Commands
+
 //tag::payee
 === Payee Feature
 ==== Payee Class
@@ -150,7 +186,8 @@ The `Payee` Class object holds all information regarding the identity of the pay
 When a new `Payee` object is created, it is stored in the respective HashMap `managerMap` for the specific project the payee is being paid for. +
 The following are the class members storing the payee's identity information.
 
-** Name : `name`
+** Project Name : `project`
+** Payee Name : `name`
 ** Email Address : `email`
 ** Matriculation Number : `matricNum`
 ** Phone Number : `phoneNum`
@@ -159,6 +196,8 @@ The following are the class members storing the payee's identity information.
 The `Payments` Class object stores the details of the payment being made. A `Payments` object once constructed will be added to the ArrayList `payments` member of the specified payee the payment is being made to.
 The following are the class members storing the payment's details.
 
+** Project : `project`
+** Payee Name : `name`
 ** Description of Payment : `item`
 ** Amount being paid : `cost`
 ** Invoice Number : `inv`
@@ -192,11 +231,15 @@ The payee feature supports the following commands:
 * `add payment p/name i/item c/cost v/inv` -- Adds a new payee to the record.
 * `delete payee p/name` -- Deletes a payee from the record.
 * `delete payment p/name v/inv` -- Deletes a payment from the record.
-* `edit p/name v/inv f/field r/replacement` -- Edits data for an existing payee in the record.
-* `find p/name` -- Lists all payments for specified payee in the record.
+* `edit p/name f/field r/replacement` -- Edits data for an existing payee in the record.
+* `find payee p/name` -- Finds details of a specified payee in the record, across all projects.
+* `find payment p/name i/item` -- Finds details of a specified payment in the record, across all projects.
+* `list payments` -- Lists all payments for the current project in the record.
+* `list payments pr/name` -- Lists all payments for specified project in the record.
+* `list payments p/name` -- Lists all payments for specified payee in the record.
 
 ==== PaymentManager
-The `PaymentManager` is an abstract class that is subclassed in the payments package, which contains the `Payee` and `Payments` classes. It serves to process the input from the `Command` package and implement the payee feature commands (Section 4.2.4). The `PaymentManager` class implements the following methods:
+The `PaymentManager` is an abstract class that is subclassed in the payments package, which contains the `Payee` and `Payments` classes. It serves to process the input from the `Command` package and implement the payee feature commands (Section 4.3.4). The `PaymentManager` class implements the following methods:
 
 * PaymentManager#addPayee
 * PaymentManager#addPayments
@@ -204,11 +247,18 @@ The `PaymentManager` is an abstract class that is subclassed in the payments pac
 * PaymentManager#deletePayments
 * PaymentManager#editPayee
 * PaymentManager#findPayee
+* PaymentManager#checkStatus
+
+[[fig-AddPayeeSeqDiagram]]
+.Sequence Diagram of the add payee command
+image::AddPayeeSeqDiagram.png[]
 
 A detailed explanation of the use case for the add payee command is given below to demonstrate how each component interacts with each other. +
-1. User executes the command `add payee p/name e/email m/matricNum ph/phoneNum` in the CLI. This input is passed from the Ui to Command where the input will be parsed to determine the command to execute. +
+1. User executes the command `add payee p/name e/email m/matricNum ph/phoneNum` in the CLI. This input is passed from the Ui to Parser where the input will be parsed to determine the command to execute. It then invokes Process, which splits the user input and breaks down the user's intended answer into information our classes can interact with. +
 2. The PaymentManager is invoked, and in this case, the addPayee method is called. The method checks which project is currently selected and constructs a new Payee object. The Payee object is pushed into the current project's managerMap, a HashMap of all the project's payees. +
-3. Assuming a valid input was passed from the user, a confirmation message showing the summary of the details of the newly created Payee would be printed. Else, an error will prompt the user to try again and provide the correct template for the command they attempted. +
+3. Assuming a valid input was passed from the user, a confirmation message showing the summary of the details of the newly created Payee would be printed. Else, an error will prompt the user to try again and provide the correct template for the command they attempted. In Process, most of the Exception handling is done to catch all possible user error cases. +
+
+The Payment Manager handles most other commands the same way, given that all payee information is stored within a single project LinkedHashMap, and all payment information is stored in an ArrayList in each Payee. The only method in Payment Manger that is different is the helper function 
 
 === History Feature
 The `history` feature is implemented to keep track of the list of all input commands entered by the user. It is facilitated by the `Storage` class which is called by the `Process` class in the `command` component.
@@ -217,23 +267,45 @@ This feature supports the following commands:
 
 * `history` - lists all the input commands(with the date and time beside) entered by the user.
 * `view history h/DATE_1 to DATE_2` - lists the input commands entered by the user during a certain period.
-* (proposed) `delete history h/DATE_1 to DATE_2` - deletes the input commands entered by the user during a certain period.
 
 The use case for the `history` command is given below to show how each component interacts with each other.
 
 1. The user executes the `history` command in the CLI. The input is passed from `Ui` to `command` to determine the command to execute.
 
-2. The `Command` component will process the `history` command and load the txt file consisting the input commands from the `Storage` class into an arraylist.
+2. The `Command` component will process the `history` command and load the json file consisting the input commands from the `Storage` class into an arraylist.
 
 3. This arraylist is passed to `Ui` for printing the list of input commands, along with the date and time it was entered, to the user.
 
 Below is the sequence diagram showing the interactions between the different components used to implement the `history` command.
 
-image::sequenceDiagramforHistory.PNG[]
+image::Slide1.PNG[]
 
 ==== Design Considerations
 ===== Aspect: How `view history h/DATE to DATE` is implemented
-* Alternative 1: The application loops through the arraylist of all the input commands loaded from the txt file in storage. In the for loop, it is checked if the date beside the command is within the date range provided in the input. If yes, then it is added to a new arraylist, which is printed once the application has gone through the for loop.
+* Alternative 1: The application loops through the arraylist of all the input commands loaded from the json file in storage. In the for loop, it is checked if the date beside the command is within the date range provided in the input. If yes, then it is added to a new arraylist, which is printed once the application has gone through the for loop.
+
+=== Undo Redo Feature
+The Undo Redo Feature is implemented for the users to quickly redo an action or reverse an action they entered by mistake. It is facilitated by the `BeforeAfterCommand` class which is called by the `Process` class in the `command` component.
+
+This feature supports the following commands:
+`undo`- undoes the previous command.(only the ones mentioned in the User Guide)
+`redo`- redoes an undone command.
+
+The use case for the `undo` command is given below to show how each component interacts with each other.
+
+1. The user executes the `undo` command in the CLI. The input is passed from `Ui` to `command` to determine the command to execute.
+
+2. The `Command` component will process the `undo` command and read from the json file consisting the previous state of the projectmap stored in `Storage`.
+
+3. This state is passed to `Parser` and is written to the storage when the program is exited with the `bye` command.
+
+Below is the sequence diagram showing the interactions between the different components used to implement a command that can be undone.
+
+image::command.PNG[]
+
+Below is the sequence diagram showing the interactions between the different components used to implement the `undo` command.
+
+image::undo seq diagram.PNG[]
 
 //tag::fund[]
 === Fund feature
@@ -388,31 +460,35 @@ Then the arraylist is sorted based on the payments' dates.
 
 == Documentation
 
-{To be added}
+=== Introduction
 
-== Testing
+We use asciidoc for writing documentation.
 
-{To be added}
+[NOTE]
+We chose asciidoc over Markdown because asciidoc, although a bit more complex than Markdown, provides more flexibility in formatting.
 
-== Dev Ops
+=== Editing Documentation
 
-=== Build Automation
+See <<UsingGradle#rendering-asciidoc-files, UsingGradle.adoc>> to learn how to render `.adoc` files locally to preview the end result of your edits.
+Alternatively, you can download the AsciiDoc plugin for IntelliJ, which allows you to preview the changes you have made to your `.adoc` files in real-time.
 
-See <<UsingGradle#, UsingGradle.adoc>> to learn how to use Gradle for build automation.
+=== Publishing Documentation
 
-=== Continuous Integration
+See <<UsingTravis#deploying-github-pages, UsingTravis.adoc>> to learn how to deploy GitHub Pages using Travis.
 
-We use https://travis-ci.org/[Travis CI] to perform _Continuous Integration_ on our projects. See <<UsingTravis#, UsingTravis.adoc>> for more details.
+=== Converting Documentation to PDF format
 
-=== Making a Release
+We use https://www.google.com/chrome/browser/desktop/[Google Chrome] for converting documentation to PDF format, as Chrome's PDF engine preserves hyperlinks used in webpages.
 
-Here are the steps to create a new release.
+Here are the steps to convert the project documentation files to PDF format.
 
-.  Update the version number in link:{repoURL}/build.gradle[`build.gradle`].
-.  Generate a JAR file <<UsingGradle#creating-the-jar-file, using Gradle>>.
-.  Tag the repo with the version number. e.g. `v0.1`
-.  https://help.github.com/articles/creating-releases/[Create a new release using GitHub] and upload the JAR file you created.
+.  Follow the instructions in <<UsingGradle#rendering-asciidoc-files, UsingGradle.adoc>> to convert the AsciiDoc files in the `docs/` directory to HTML format.
+.  Go to your generated HTML files in the `build/docs` folder, right click on them and select `Open with` -> `Google Chrome`.
+.  Within Chrome, click on the `Print` option in Chrome's menu.
+.  Set the destination to `Save as PDF`, then click `Save` to save a copy of the file in PDF format. For best results, use the settings indicated in the screenshot below.
 
+.Saving documentation as PDF files in Chrome
+image::chrome_save_as_pdf.png[width="300"]
 
 [appendix]
 == Product Scope
@@ -951,33 +1027,66 @@ Expected: The payee is added to the record.
 +
 Expected: Payee is not added to the project. Error message stating that a payee with the same name is printed.
 
-
 ==== Delete Payee
 
 . Deletes a payee from a project.
+.. Prerequisites: Project exists and is gone to using the `goto` command. Payees exists.
+.. Test case: `delete payee p/John`
 
-
-
++
+Expected: Payee is deleted from project.
 
 ==== Add Payment
 
+. Adds a payment made by an existing payee to a project.
+.. Prerequisites: Project exists and is gone to using the `goto` command. Payee exists.
+.. Test case: `add payment p/John i/food c/10 v/a01222
+
++
+Expected: Payment is added and payment details is printed.
+
+. Adds a payment made by a non-existing payee to a project.
+.. Prerequisites: Project exists and is gone to using the `goto` command. Payee does not exist.
+.. Test case: `add payment p/Karan i/food c/10 v/a01222
+
++
+Expected: Payment is not added and error message is printed requesting payee to be added.
 
 ==== Delete Payment
 
+. Deletes a payment made by an existing payee to a project.
+.. Prerequisites: Project exists and is gone to using the `goto` command. Payee exists.
+.. Test case: `add payment p/John i/food c/10 v/a01222
 
-==== Get Payee
-
++
+Expected: Payment is deleted and payment details is printed.
 
 ==== Find Payee
 
+. Finds a payee in current project being managed.
+.. Prerequisites: Project exists and is gone to using the `goto` command. Payee exists.
+.. Test case: `find payee p/John`
+
++
+Expected: Payee details are printed.
 
 ==== Edit Payment/Payee
 
+. Edits payee details in the project currently being managed.
+.. Prerequisites: Project exists and is gone to using the `goto` command. Payee exists.
+.. Test case: `edit p/John v/a01222 f/STATUS r/APPROVED
 
++
+Expected: Payee details are updated.
+
+. Edits payment details of a payee in the project currently being managed.
+.. Prerequisites: Project exists and is gone to using the `goto` command. Payee and payment exist.
+.. Test case: `edit p/John v/ f/PHONE r/99192232`
+
++
+Expected: Payment details are updated.
 
 === Task Tracking
-
-==== Reminder
 
 ==== Deadline
 
@@ -996,26 +1105,3 @@ Expected: Payee is not added to the project. Error message stating that a payee 
 ==== Reschedule Deadline
 
 ==== View Schedule
-
-
-
-=== Deleting a person
-
-. Deleting a person while all persons are listed
-
-.. Prerequisites: List all persons using the `list` command. Multiple persons in the list.
-.. Test case: `delete 1` +
-   Expected: First contact is deleted from the list. Details of the deleted contact shown in the status message. Timestamp in the status bar is updated.
-.. Test case: `delete 0` +
-   Expected: No person is deleted. Error details shown in the status message. Status bar remains the same.
-.. Other incorrect delete commands to try: `delete`, `delete x` (where x is larger than the list size) _{give more}_ +
-   Expected: Similar to previous.
-
-
-=== Saving data
-
-. Dealing with missing/corrupted data files
-
-.. _{explain how to simulate a missing/corrupted file and the expected behavior}_
-
-_{ more test cases ... }_
